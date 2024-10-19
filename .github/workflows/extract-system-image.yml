@@ -1,0 +1,41 @@
+name: Extract System Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      firmware_url:
+        description: 'URL of the firmware zip file'
+        required: true
+
+jobs:
+  extract:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Clone system.new.dat-extractor repository
+      run: |
+        git clone https://github.com/LizenzFass78851/system.new.dat-extractor.git
+        dir system.new.dat-extractor
+
+    - name: Download firmware ZIP
+      run: |
+        curl -L ${{ github.event.inputs.firmware_url }} -o firmware.zip
+        dir
+
+    - name: Unzip the firmware
+      run: |
+        system.new.dat-extractor/7z.exe x firmware.zip -osystem_extracted
+        dir system_extracted
+
+    - name: Run system image extractor
+      run: |
+        system.new.dat-extractor/system_image_extractor_V4.cmd system_extracted
+
+    - name: Upload extracted system image
+      uses: actions/upload-artifact@v3
+      with:
+        name: extracted-system-image
+        path: ./system_extracted/
